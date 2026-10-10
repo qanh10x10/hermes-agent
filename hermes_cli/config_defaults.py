@@ -1299,6 +1299,8 @@ DEFAULT_CONFIG = {
     # plugins/context_engine/<name>/ or ~/.hermes/plugins/.
     "context": {
         "engine": "compressor",
+        # Optional agent budget ceiling; smaller model windows still use auto-detection.
+        "ceiling_tokens": None,
         # Return freed glibc pages at agent/TUI cleanup boundaries (no-op elsewhere).
         "memory_trim": {
             "enabled": True,
