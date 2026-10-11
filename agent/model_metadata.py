@@ -2242,7 +2242,29 @@ def _resolve_provider_aware_context_length(model: str, base_url: str, api_key: s
     return None
 
 
+def get_context_ceiling_tokens() -> int | None:
+    """Optional local budget cap; invalid/unset values leave auto-detection unchanged."""
+    from hermes_cli.config import load_config_readonly
+
+    context = load_config_readonly().get("context") or {}
+    ceiling = context.get("ceiling_tokens") if isinstance(context, dict) else None
+    return ceiling if type(ceiling) is int and ceiling > 0 else None
+
+
 def get_model_context_length(
+    model: str, base_url: str = "", api_key: str = "", config_context_length: int | None = None,
+    provider: str = "", custom_providers: list | None = None,
+) -> int:
+    # ponytail: cap the resolved agent budget, never provider metadata or smaller native windows.
+    native = _detect_model_context_length(
+        model, base_url=base_url, api_key=api_key, config_context_length=config_context_length,
+        provider=provider, custom_providers=custom_providers,
+    )
+    ceiling = get_context_ceiling_tokens()
+    return min(native, ceiling) if ceiling is not None else native
+
+
+def _detect_model_context_length(
     model: str, base_url: str = "", api_key: str = "", config_context_length: int | None = None,
     provider: str = "", custom_providers: list | None = None,
 ) -> int:
